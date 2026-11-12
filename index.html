@@ -361,6 +361,21 @@ footer a:hover{color:var(--gold)}
 @media (max-width:900px){.co{grid-template-columns:1fr}}
 @media (max-width:480px){.arms{grid-template-columns:1fr}}
 
+.cform{margin-top:28px;display:grid;gap:14px;padding:28px;border:1px solid var(--line);border-radius:20px;background:rgba(17,12,9,.65);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.crow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.cf{display:grid;gap:8px;min-width:0}
+.cf span{font:500 11px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
+.cf input,.cf textarea{width:100%;font:400 16px/1.5 var(--f-body);color:var(--ink);background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:13px 15px;transition:border-color .2s,box-shadow .2s;resize:vertical}
+.cf input:focus,.cf textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(242,165,65,.18)}
+.cf textarea::placeholder{color:var(--faint)}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.cfoot{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.cstatus{font-size:14px;color:var(--muted);min-height:1.4em}
+.cstatus.ok{color:var(--ok)}
+.cstatus.err{color:#f0a08a}
+.btn[disabled]{opacity:.6;cursor:progress}
+@media (max-width:640px){.crow{grid-template-columns:1fr}.cform{padding:20px}}
+
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
   *,*::before,*::after{animation:none!important;transition:none!important}
@@ -663,12 +678,24 @@ footer a:hover{color:var(--gold)}
     <div class="in-w contact-in">
       <p class="eyebrow">Contact</p>
       <h2 id="contact-h">Let's build<br>something <span class="serif">that works.</span></h2>
-      <p class="lead">Available for freelance software, web and blockchain development, prompt engineering, CRM setup, AI evaluation and data analysis. Send a short note about what you need and I'll reply within one working day.</p>
+      <p class="lead">Available for freelance software, web and blockchain development, prompt engineering, CRM setup, AI evaluation and data analysis. Send a short note below about what you need and I'll reply within one working day.</p>
       <div class="reach">
         <button type="button" class="rcard" id="copy-email"><div><span class="k">Email · tap to copy</span><span class="v" id="email">joshuaikhanoseme@gmail.com</span></div><span class="go" id="copy-ico" aria-hidden="true">⧉</span></button>
         <a class="rcard" href="https://www.linkedin.com/in/duke-ikhanoseme" target="_blank" rel="noopener"><div><span class="k">LinkedIn</span><span class="v">duke-ikhanoseme</span></div><span class="go" aria-hidden="true">↗</span></a>
         <a class="rcard" href="https://github.com/The-Duke-Joshua" target="_blank" rel="noopener"><div><span class="k">GitHub</span><span class="v">The-Duke-Joshua</span></div><span class="go" aria-hidden="true">↗</span></a>
       </div>
+      <form class="cform" id="cform" novalidate>
+        <div class="crow">
+          <label class="cf"><span>Your name</span><input id="cf-name" name="name" type="text" maxlength="100" autocomplete="name" required></label>
+          <label class="cf"><span>Your email</span><input id="cf-email" name="email" type="email" maxlength="200" autocomplete="email" required></label>
+        </div>
+        <label class="cf"><span>What do you need?</span><textarea id="cf-msg" name="message" rows="5" maxlength="4000" required placeholder="A short note about your project, role or idea"></textarea></label>
+        <label class="hp" aria-hidden="true">Company<input id="cf-company" name="company" type="text" tabindex="-1" autocomplete="off"></label>
+        <div class="cfoot">
+          <button type="submit" class="btn gold" id="cf-send">Send message <span class="arr">↗</span></button>
+          <p class="cstatus" id="cf-status" role="status" aria-live="polite"></p>
+        </div>
+      </form>
     </div>
   </section>
 </div>
@@ -854,6 +881,25 @@ footer a:hover{color:var(--gold)}
   }
   addEventListener('hashchange', go);
   show(pick());
+
+
+  /* contact form -> Supabase (insert only; the public key cannot read messages) */
+  var SB_URL = 'https://kdwnpqcfgwqrqqnqsbns.supabase.co', SB_KEY = 'sb_publishable_Ykw13fR406w8YEkYEOPiog_guS0iRct';
+  var cform = document.getElementById('cform');
+  if (cform) cform.addEventListener('submit', function(e){
+    e.preventDefault();
+    var st = document.getElementById('cf-status'), btn = document.getElementById('cf-send');
+    var name = document.getElementById('cf-name').value.trim(), email = document.getElementById('cf-email').value.trim(), msg = document.getElementById('cf-msg').value.trim();
+    st.className = 'cstatus';
+    if (document.getElementById('cf-company').value){ st.textContent = 'Thanks, your message is on its way.'; st.className = 'cstatus ok'; cform.reset(); return; }
+    if (!name || !msg){ st.textContent = 'Add your name and a short message.'; st.className = 'cstatus err'; return; }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ st.textContent = 'Check your email address, it looks incomplete.'; st.className = 'cstatus err'; return; }
+    btn.disabled = true; st.textContent = 'Sending…';
+    fetch(SB_URL + '/rest/v1/messages', { method: 'POST', headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, body: JSON.stringify({ name: name, email: email, message: msg }) })
+      .then(function(r){ if (!r.ok) throw new Error(r.status); st.textContent = 'Thanks, ' + name.split(' ')[0] + '. Your message is in, and I\'ll reply within one working day.'; st.className = 'cstatus ok'; cform.reset(); })
+      .catch(function(){ st.textContent = 'That didn\'t send. Please try again, or email me directly at the address above.'; st.className = 'cstatus err'; })
+      .then(function(){ btn.disabled = false; });
+  });
 
   /* copy email */
   document.getElementById('copy-email').addEventListener('click', function(){
