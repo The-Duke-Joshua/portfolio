@@ -2,7 +2,7 @@
 
 Personal portfolio of **Joshua (Duke) Ikhanoseme**: software, web and blockchain developer, prompt engineer and CRM specialist based in Abuja, Nigeria. Founder of Joshua Florida Company.
 
-**Live site:** _add the Vercel URL here_
+**Live site:** [joshua-ikhanoseme.vercel.app](https://joshua-ikhanoseme.vercel.app)
 
 ## What's inside
 - Services, case studies and work experience
